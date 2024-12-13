@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # --- Load Data ---
-@st.cache_data
 def load_data(file_path):
     return pd.read_csv(file_path)
 
