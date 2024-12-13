@@ -5,19 +5,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 # --- Load Data ---
-def load_data(file_path):
-    return pd.read_csv(file_path)
+@st.cache_data
+def load_data(uploaded_file):
+    """Load data from an uploaded CSV file."""
+    return pd.read_csv(uploaded_file)
 
-# --- Clean Data ---
+# --- Clean and Preprocess Data ---
 def clean_sm(x):
+    """Convert non-1 values to 0."""
     return np.where(x == 1, 1, 0)
 
 def preprocess_data(data):
-    # Create a clean copy
+    """Clean and preprocess the data."""
     ss = data.copy()
     ss['sm_li'] = clean_sm(ss['web1h'])
 
@@ -32,53 +35,68 @@ def preprocess_data(data):
 
     return ss
 
-# --- App Layout ---
-st.title("Social Media Usage Prediction App")
-st.markdown("Predict if someone uses LinkedIn based on demographic features.")
+# --- Main App ---
+st.title("LinkedIn Usage Prediction App")
+st.markdown("""
+Predict whether someone uses LinkedIn based on demographic features like income, education, and more. 
+Upload a dataset to get started!
+""")
 
 # File uploader
 uploaded_file = st.file_uploader("Upload your dataset (.csv)", type=["csv"])
 if uploaded_file:
-    # Load and preprocess data
+    # Load data
     data = load_data(uploaded_file)
-    st.write("Data Loaded:")
+    st.write("### Original Data")
     st.dataframe(data.head())
+
+    # Preprocess data
     ss = preprocess_data(data)
-    
-    st.write("Preprocessed Data:")
-    st.dataframe(ss.head())
-    
-    # Split data
     features = ['income', 'educ2', 'parent', 'married', 'female', 'age']
     X = ss[features]
     y = ss['sm_li']
+    st.write("### Preprocessed Data")
+    st.dataframe(ss.head())
+
+    # Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
+
     # Scale data
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    
-    # Train the model
+
+    # Train model
     model = LogisticRegression(class_weight='balanced', random_state=42, max_iter=500)
     model.fit(X_train_scaled, y_train)
-    
-    # Evaluate the model
+
+    # Evaluate model
     y_pred = model.predict(X_test_scaled)
     accuracy = accuracy_score(y_test, y_pred)
-    st.write(f"Model Accuracy: {accuracy:.4f}")
-    
-    # Confusion matrix
+    st.write(f"### Model Accuracy: {accuracy:.4f}")
+
+    # Display confusion matrix
     cm = confusion_matrix(y_test, y_pred)
-    st.write("Confusion Matrix:")
+    st.write("### Confusion Matrix")
     st.dataframe(pd.DataFrame(cm, index=["Non-User", "User"], columns=["Predicted Non-User", "Predicted User"]))
 
     # Classification report
-    st.write("Classification Report:")
+    st.write("### Classification Report")
     st.text(classification_report(y_test, y_pred))
 
-    # Predictions
-    st.header("Make a Prediction")
+    # Visualization
+    st.write("### Feature Distributions by LinkedIn Usage")
+    for feature in features:
+        st.write(f"**{feature} vs LinkedIn Usage**")
+        fig, ax = plt.subplots()
+        sns.boxplot(x='sm_li', y=feature, data=ss, ax=ax)
+        ax.set_title(f'{feature} vs LinkedIn Usage')
+        ax.set_xlabel('LinkedIn Usage (0 = No, 1 = Yes)')
+        ax.set_ylabel(feature)
+        st.pyplot(fig)
+
+    # Prediction form
+    st.write("### Make a Prediction")
     with st.form("prediction_form"):
         income = st.slider("Income (1-9)", 1, 9, value=5)
         educ2 = st.slider("Education Level (1-8)", 1, 8, value=4)
@@ -93,5 +111,5 @@ if uploaded_file:
             new_data_scaled = scaler.transform(new_data)
             prediction = model.predict(new_data_scaled)[0]
             probability = model.predict_proba(new_data_scaled)[0]
-            st.write(f"Prediction: {'LinkedIn User' if prediction == 1 else 'Non-User'}")
+            st.write(f"### Prediction: {'LinkedIn User' if prediction == 1 else 'Non-User'}")
             st.write(f"Probability of LinkedIn User: {probability[1]:.4f}")
