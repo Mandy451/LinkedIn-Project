@@ -8,6 +8,11 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+@st.cache_data
+def load_data_from_github():
+    url = "https://raw.githubusercontent.com/Mandy451/LinkedIn-Project/refs/heads/main/social_media_usage.csv"
+    return pd.read_csv(url)
+
 # --- Helper Functions ---
 def clean_sm(x):
     """Convert non-1 values to 0."""
