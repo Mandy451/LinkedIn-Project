@@ -6,9 +6,20 @@
 
 import streamlit as st
 import pandas as pd
+import os
 import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+
+# Get the current directory
+current_dir = os.path.dirname(__file__)
+
+# Load the model and scaler
+model_path = os.path.join(current_dir, "logistic_model.pkl")
+scaler_path = os.path.join(current_dir, "scaler.pkl")
+
+model = pickle.load(open(model_path, "rb"))
+scaler = pickle.load(open(scaler_path, "rb"))
 
 # Load the trained model and scaler
 model = pickle.load(open("logistic_model.pkl", "rb"))
