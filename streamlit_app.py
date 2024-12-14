@@ -7,6 +7,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pickle
+import os
 
 @st.cache_data
 def load_data_from_github():
